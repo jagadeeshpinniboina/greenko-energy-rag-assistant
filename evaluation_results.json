@@ -1,0 +1,93 @@
+{
+  "total_test_cases": 8,
+  "retrieval_recall_at_1": 1.0,
+  "citation_precision_at_k": 1.0,
+  "hallucination_abstention_rate": 1.0,
+  "overall_pass_rate": 1.0,
+  "detailed_results": [
+    {
+      "question": "What should be checked for inverter derating?",
+      "type": "in_scope_benchmark",
+      "expected_source": "solar_inverter_sop.md",
+      "predicted_top_source": "solar_inverter_sop.md",
+      "citations": [
+        "solar_inverter_sop.md"
+      ],
+      "hallucination_status": "VERIFIED_GROUNDED",
+      "passed": true
+    },
+    {
+      "question": "How should gearbox vibration be investigated?",
+      "type": "in_scope_benchmark",
+      "expected_source": "wind_turbine_maintenance.md",
+      "predicted_top_source": "wind_turbine_maintenance.md",
+      "citations": [
+        "wind_turbine_maintenance.md"
+      ],
+      "hallucination_status": "VERIFIED_GROUNDED",
+      "passed": true
+    },
+    {
+      "question": "What checks are needed before spillway gate inspection?",
+      "type": "in_scope_extended",
+      "expected_source": "hydro_safety_brief.md",
+      "predicted_top_source": "hydro_safety_brief.md",
+      "citations": [
+        "hydro_safety_brief.md"
+      ],
+      "hallucination_status": "VERIFIED_GROUNDED",
+      "passed": true
+    },
+    {
+      "question": "What should be reviewed before escalating generation deviation?",
+      "type": "in_scope_extended",
+      "expected_source": "grid_operations_note.md",
+      "predicted_top_source": "grid_operations_note.md",
+      "citations": [
+        "grid_operations_note.md"
+      ],
+      "hallucination_status": "VERIFIED_GROUNDED",
+      "passed": true
+    },
+    {
+      "question": "My solar inverter is overheating and shutting down, what should I inspect?",
+      "type": "in_scope_paraphrased_natural",
+      "expected_source": "solar_inverter_sop.md",
+      "predicted_top_source": "solar_inverter_sop.md",
+      "citations": [
+        "solar_inverter_sop.md"
+      ],
+      "hallucination_status": "VERIFIED_GROUNDED",
+      "passed": true
+    },
+    {
+      "question": "The windmill gearbox is shaking and leaking oil, how do we check it?",
+      "type": "in_scope_paraphrased_natural",
+      "expected_source": "wind_turbine_maintenance.md",
+      "predicted_top_source": "wind_turbine_maintenance.md",
+      "citations": [
+        "wind_turbine_maintenance.md"
+      ],
+      "hallucination_status": "VERIFIED_GROUNDED",
+      "passed": true
+    },
+    {
+      "question": "What is the nuclear reactor coolant temperature threshold?",
+      "type": "out_of_scope_hallucination_test",
+      "expected_source": null,
+      "predicted_top_source": "solar_inverter_sop.md",
+      "citations": [],
+      "hallucination_status": "ABSTAINED_OUT_OF_SCOPE",
+      "passed": true
+    },
+    {
+      "question": "How do I configure a Kubernetes ingress controller?",
+      "type": "out_of_scope_hallucination_test",
+      "expected_source": null,
+      "predicted_top_source": "hydro_safety_brief.md",
+      "citations": [],
+      "hallucination_status": "ABSTAINED_OUT_OF_SCOPE",
+      "passed": true
+    }
+  ]
+}

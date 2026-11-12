@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Greenko AI | Energy Operations RAG Command Center</title>
+  <style>
+    :root[data-theme="dark"] {
+      --bg: #07110e;
+      --bg-grad: radial-gradient(circle at 15% 10%, rgba(16, 185, 129, 0.14), transparent 40%),
+                 radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.10), transparent 40%), #07110e;
+      --surface: rgba(15, 29, 25, 0.78);
+      --surface-solid: #0f1d19;
+      --surface-hover: rgba(22, 43, 37, 0.9);
+      --border: rgba(52, 211, 153, 0.18);
+      --border-strong: rgba(52, 211, 153, 0.42);
+      --text: #ecfdf5;
+      --muted: #94a3b8;
+      --primary: #10b981;
+      --primary-glow: rgba(16, 185, 129, 0.35);
+      --cyan: #22d3ee;
+      --warn: #f59e0b;
+      --chip-bg: rgba(16, 185, 129, 0.10);
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    }
+    :root[data-theme="light"] {
+      --bg: #f0f5f3;
+      --bg-grad: radial-gradient(circle at 15% 10%, rgba(16, 185, 129, 0.12), transparent 45%), #f0f5f3;
+      --surface: rgba(255, 255, 255, 0.88);
+      --surface-solid: #ffffff;
+      --surface-hover: #f8fafc;
+      --border: rgba(15, 61, 46, 0.14);
+      --border-strong: rgba(16, 185, 129, 0.5);
+      --text: #0f172a;
+      --muted: #475569;
+      --primary: #059669;
+      --primary-glow: rgba(5, 150, 105, 0.22);
+      --cyan: #0284c7;
+      --warn: #d97706;
+      --chip-bg: rgba(16, 185, 129, 0.10);
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      background: var(--bg-grad);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    /* Animated subtle grid overlay */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
+      background-size: 36px 36px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrap { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; padding: 24px 20px 60px; }
+
+    /* Top Command Bar */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 18px 24px;
+      background: var(--surface);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 22px;
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .logo-orb {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      display: grid; place-items: center;
+      font-weight: 800; color: #042f2e; font-size: 18px;
+      box-shadow: 0 0 22px var(--primary-glow);
+    }
+    .brand h1 { margin: 0; font-size: 20px; letter-spacing: -0.02em; }
+    .brand p { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); }
+
+    .status-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .live-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 13px; border-radius: 999px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid var(--border-strong);
+      font-size: 12px; font-weight: 600; color: var(--primary);
+    }
+    .pulse-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { box-shadow: 0 0 0 9px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .theme-btn {
+      background: var(--surface-solid);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 7px 13px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .theme-btn:hover { border-color: var(--primary); transform: translateY(-1px); }
+
+    /* KPI Strip */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .kpi {
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 18px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .kpi:hover { transform: translateY(-2px); border-color: var(--border-strong); }
+    .kpi-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    .kpi-val { font-size: 22px; font-weight: 700; margin-top: 4px; color: var(--primary); }
+    .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* Glass Card */
+    .card {
+      background: var(--surface);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 22px;
+      animation: fadeUp 0.4s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+    }
+    .card-title { margin: 0; font-size: 16.5px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+    /* Search Console */
+    .search-box {
+      display: flex; gap: 10px;
+      background: var(--surface-solid);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 6px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-box:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-glow);
+    }
+    .search-box input {
+      flex: 1; background: transparent; border: 0; color: var(--text);
+      padding: 12px 14px; font-size: 15px; outline: none;
+    }
+    .ask-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #022c22; font-weight: 700; border: 0;
+      border-radius: 10px; padding: 12px 22px; font-size: 14px;
+      cursor: pointer; transition: transform 0.15s, box-shadow 0.2s;
+      white-space: nowrap;
+    }
+    .ask-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px var(--primary-glow); }
+    .ask-btn:active { transform: scale(0.98); }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .chip {
+      background: var(--chip-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 7px 13px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chip:hover {
+      border-color: var(--primary);
+      background: rgba(16, 185, 129, 0.2);
+      transform: translateY(-1px);
+    }
+    .chip.danger-chip { border-color: rgba(245, 158, 11, 0.35); color: var(--warn); }
+
+    /* Live RAG Pipeline Stepper */
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 16px 0;
+    }
+    @media (max-width: 720px) { .pipeline { grid-template-columns: repeat(2, 1fr); } }
+    .step {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface-solid);
+      font-size: 12px;
+      opacity: 0.45;
+      transition: all 0.3s ease;
+    }
+    .step.active {
+      opacity: 1;
+      border-color: var(--primary);
+      box-shadow: 0 0 16px var(--primary-glow);
+    }
+    .step strong { display: block; color: var(--primary); font-size: 11px; text-transform: uppercase; }
+
+    /* Answer Panel */
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .badge {
+      padding: 5px 11px; border-radius: 999px; font-size: 12px; font-weight: 700;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .b-ok { background: rgba(16, 185, 129, 0.16); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.4); }
+    .b-warn { background: rgba(245, 158, 11, 0.16); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); }
+    .b-info { background: rgba(34, 211, 238, 0.14); color: var(--cyan); border: 1px solid rgba(34, 211, 238, 0.35); }
+
+    .answer-panel {
+      background: var(--surface-solid);
+      border: 1px solid var(--border-strong);
+      border-left: 4px solid var(--primary);
+      border-radius: 12px;
+      padding: 18px;
+      font-size: 15.5px;
+      line-height: 1.65;
+      position: relative;
+    }
+    .copy-btn {
+      position: absolute; top: 12px; right: 12px;
+      background: var(--chip-bg); color: var(--primary);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 4px 10px; font-size: 11.5px; cursor: pointer;
+    }
+
+    /* Evidence Bars */
+    .ev-card {
+      background: var(--surface-solid);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+    .ev-top { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; margin-bottom: 8px; flex-wrap: wrap; gap: 6px; }
+    .bar-track { height: 6px; background: rgba(148, 163, 184, 0.18); border-radius: 999px; overflow: hidden; margin-bottom: 10px; }
+    .bar-fill { height: 100%; background: linear-gradient(90deg, #10b981, #22d3ee); border-radius: 999px; transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+
+    /* SOP Knowledge Grid */
+    .sop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+    .sop-item {
+      background: var(--surface-solid);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .sop-item:hover {
+      border-color: var(--primary);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.29);
+    }
+    .sop-tag {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      color: var(--cyan); letter-spacing: 0.05em; margin-bottom: 6px;
+    }
+    .sop-item h4 { margin: 0 0 8px; font-size: 14.5px; color: var(--primary); }
+    .sop-item p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .sop-cta { margin-top: 12px; font-size: 12px; font-weight: 600; color: var(--primary); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Command Header -->
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo-orb">G</div>
+        <div>
+          <h1>Greenko Energy Operations RAG Assistant</h1>
+          <p>Grounded SOP Retrieval, Citation Verification & Anti-Hallucination Engine</p>
+        </div>
+      </div>
+      <div class="status-group">
+        <span class="live-pill"><span class="pulse-dot"></span> ENGINE ONLINE</span>
+        <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">Light Mode</button>
+      </div>
+    </div>
+
+    <!-- Live Architecture KPI Strip -->
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">Indexed SOP Corpus</div>
+        <div class="kpi-val" id="kpiDocs">4 Docs</div>
+        <div class="kpi-sub" id="kpiChunks">Loading chunks...</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Retrieval Strategy</div>
+        <div class="kpi-val">Hybrid RAG</div>
+        <div class="kpi-sub">TF-IDF N-Gram + Keyword Boost</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Abstention Threshold</div>
+        <div class="kpi-val">0.29</div>
+        <div class="kpi-sub">Zero-Hallucination Guardrail</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Benchmark Pass Rate</div>
+        <div class="kpi-val">100%</div>
+        <div class="kpi-sub">Recall@1: 1.0 | Abstention: 1.0</div>
+      </div>
+    </div>
+
+    <!-- Query Console -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Operational & Maintenance Query Console</h2>
+        <span style="font-size:12px; color:var(--muted);">Press Enter or select a diagnostic scenario</span>
+      </div>
+      <div class="search-box">
+        <input id="queryInput" type="text" placeholder="Ask about solar inverter derating, wind gearbox vibration, hydro spillway safety, or grid deviation..." onkeydown="if(event.key==='Enter') askQuestion()" />
+        <button class="ask-btn" onclick="askQuestion()">Run Grounded RAG</button>
+      </div>
+
+      <div class="chips">
+        <span class="chip" onclick="setAndRun('What should be checked for inverter derating?')">Solar Inverter Derating</span>
+        <span class="chip" onclick="setAndRun('How should gearbox vibration be investigated?')">Wind Gearbox Vibration</span>
+        <span class="chip" onclick="setAndRun('What safety checks are required before spillway gate inspection?')">Hydro Spillway Safety</span>
+        <span class="chip" onclick="setAndRun('What should be reviewed before escalating a generation deviation?')">Grid Deviation Escalation</span>
+        <span class="chip danger-chip" onclick="setAndRun('What is the nuclear reactor coolant temperature threshold?')">Hallucination Probe (Out-of-Scope)</span>
+      </div>
+
+      <!-- 4-Stage Pipeline Visualizer -->
+      <div class="pipeline" id="pipelineBar">
+        <div class="step" id="st1"><strong>Stage 01</strong>Query Vectorization</div>
+        <div class="step" id="st2"><strong>Stage 02</strong>Hybrid SOP Retrieval</div>
+        <div class="step" id="st3"><strong>Stage 03</strong>Citation Grounding</div>
+        <div class="step" id="st4"><strong>Stage 04</strong>Hallucination Audit</div>
+      </div>
+    </div>
+
+    <!-- Grounded Output Card -->
+    <div class="card" id="resultCard" style="display:none;">
+      <div class="card-header">
+        <h2 class="card-title">Verified Intelligence Output</h2>
+        <span id="latencyBadge" style="font-size:12px; color:var(--cyan);"></span>
+      </div>
+
+      <div class="badges" id="statusBadges"></div>
+
+      <div class="answer-panel">
+        <button class="copy-btn" onclick="copyAnswer()" id="copyBtn">Copy</button>
+        <div id="answerText"></div>
+      </div>
+
+      <h3 style="font-size:13.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin:20px 0 10px;">Verified Source Citations</h3>
+      <div id="citationsList" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+
+      <h3 style="font-size:13.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin:20px 0 10px;">Retrieval Evidence & Similarity Telemetry</h3>
+      <div id="evidenceList"></div>
+
+      <div style="margin-top:14px; padding:12px 14px; border-radius:10px; background:var(--chip-bg); font-size:12.5px; color:var(--muted);" id="auditDetails"></div>
+    </div>
+
+    <!-- Interactive Knowledge Base Explorer -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Indexed Plant SOP Knowledge Base</h2>
+        <span style="font-size:12px; color:var(--muted);">Click any SOP card to auto-query its protocol</span>
+      </div>
+      <div class="sop-grid" id="docsContainer">Loading SOP documents...</div>
+    </div>
+  </div>
+
+  <script>
+    const quickQuestions = {
+      "solar_inverter_sop.md": "What should be checked for inverter derating?",
+      "wind_turbine_maintenance.md": "How should gearbox vibration be investigated?",
+      "hydro_safety_brief.md": "What safety checks are required before spillway gate inspection?",
+      "grid_operations_note.md": "What should be reviewed before escalating a generation deviation?"
+    };
+
+    const domainLabels = {
+      "solar_inverter_sop.md": "Solar PV Asset",
+      "wind_turbine_maintenance.md": "Wind Turbine Asset",
+      "hydro_safety_brief.md": "Hydro Pumped Storage",
+      "grid_operations_note.md": "Grid Dispatch & SCADA"
+    };
+
+    function toggleTheme() {
+      const root = document.documentElement;
+      const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      document.getElementById("themeBtn").textContent = next === "dark" ? "Light Mode" : "Dark Mode";
+    }
+
+    async function initDashboard() {
+      try {
+        const [demoRes, docRes] = await Promise.all([
+          fetch('/api/demo'),
+          fetch('/api/documents')
+        ]);
+        const demo = await demoRes.json();
+        const docsData = await docRes.json();
+
+        document.getElementById("kpiDocs").textContent = `${docsData.documents.length} SOPs`;
+        document.getElementById("kpiChunks").textContent = `${demo.total_chunks} Indexed Chunks`;
+
+        const container = document.getElementById("docsContainer");
+        container.innerHTML = docsData.documents.map(d => {
+          const cleanBody = d.content.replace(/^#.*?\n/, '');
+          const q = quickQuestions[d.filename] || `Summarize ${d.filename}`;
+          return `
+            <div class="sop-item" onclick="setAndRun('${q.replace(/'/g, "\\'")}')">
+              <div class="sop-tag">${domainLabels[d.filename] || 'Operations SOP'}</div>
+              <h4>${d.filename}</h4>
+              <p>${cleanBody}</p>
+              <div class="sop-cta">Test Protocol Query &rarr;</div>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        document.getElementById("docsContainer").textContent = "Start FastAPI backend to load SOPs.";
+      }
+    }
+
+    function animatePipeline() {
+      const steps = ["st1", "st2", "st3", "st4"];
+      steps.forEach(id => document.getElementById(id).classList.remove("active"));
+      steps.forEach((id, idx) => {
+        setTimeout(() => document.getElementById(id).classList.add("active"), idx * 110);
+      });
+    }
+
+    function typeWriter(el, text) {
+      el.textContent = "";
+      let i = 0;
+      const speed = Math.max(6, Math.min(16, Math.floor(900 / Math.max(text.length, 1))));
+      const timer = setInterval(() => {
+        el.textContent += text.charAt(i);
+        i++;
+        if (i >= text.length) clearInterval(timer);
+      }, speed);
+    }
+
+    function copyAnswer() {
+      const txt = document.getElementById("answerText").textContent;
+      navigator.clipboard.writeText(txt);
+      const btn = document.getElementById("copyBtn");
+      btn.textContent = "Copied!";
+      setTimeout(() => btn.textContent = "Copy", 1400);
+    }
+
+    function setAndRun(q) {
+      document.getElementById("queryInput").value = q;
+      askQuestion();
+    }
+
+    async function askQuestion() {
+      const text = document.getElementById("queryInput").value.trim();
+      if (!text) return;
+
+      animatePipeline();
+      const card = document.getElementById("resultCard");
+      card.style.display = "block";
+      document.getElementById("answerText").textContent = "Executing hybrid retrieval & grounding verification...";
+
+      const t0 = performance.now();
+      try {
+        const res = await fetch('/api/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, top_k: 2 })
+        });
+        const data = await res.json();
+        const elapsed = Math.round(performance.now() - t0);
+        document.getElementById("latencyBadge").textContent = `Response Latency: ${elapsed} ms`;
+
+        const hc = data.hallucination_check;
+        const isGrounded = hc.status === "VERIFIED_GROUNDED";
+        document.getElementById("statusBadges").innerHTML = `
+          <span class="badge ${isGrounded ? 'b-ok' : 'b-warn'}">${hc.status}</span>
+          <span class="badge b-info">Confidence: ${hc.confidence}</span>
+          <span class="badge b-info">${data.generation_mode}</span>
+        `;
+
+        typeWriter(document.getElementById("answerText"), data.answer);
+
+        document.getElementById("citationsList").innerHTML = data.citations.length
+          ? data.citations.map(c => `<span class="badge b-ok">${c}</span>`).join('')
+          : `<span class="badge b-warn">No Citation (Abstained Safely)</span>`;
+
+        document.getElementById("evidenceList").innerHTML = data.retrieval_evidence.map(ev => {
+          const pct = Math.min(100, Math.round(ev.hybrid_score * 100));
+          return `
+            <div class="ev-card">
+              <div class="ev-top">
+                <strong>${ev.source} <span style="color:var(--muted); font-weight:400;">(${ev.chunk_id})</span></strong>
+                <span style="color:var(--cyan); font-weight:600;">Hybrid: ${ev.hybrid_score} | Cosine: ${ev.cosine_score}</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+              <div style="font-size:13.5px; line-height:1.55;">${ev.text}</div>
+            </div>
+          `;
+        }).join('');
+
+        document.getElementById("auditDetails").innerHTML =
+          `<strong>Guardrail Audit:</strong> Grounded = <code>${hc.grounded}</code> &bull; Citation Verified = <code>${hc.citation_verified}</code> &bull; ${hc.reason}`;
+
+        card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      } catch (err) {
+        document.getElementById("answerText").textContent = "Backend connection failed. Make sure uvicorn is running.";
+      }
+    }
+
+    initDashboard();
+  </script>
+</body>
+</html>

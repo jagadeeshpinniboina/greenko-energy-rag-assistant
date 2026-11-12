@@ -1,0 +1,3 @@
+question,expected_source
+What should be checked for inverter derating?,solar_inverter_sop.md
+How should gearbox vibration be investigated?,wind_turbine_maintenance.md
